@@ -1,0 +1,6 @@
+{
+  "name": "Whiteboard Studio",
+  "description": "High-performance canvas whiteboard with drawing tools, image placement, auto-saving drafts, and presentation mode.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
