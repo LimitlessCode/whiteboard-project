@@ -9,7 +9,7 @@ import { DraftsModal } from './components/DraftsModal';
 import { ShortcutsModal } from './components/ShortcutsModal';
 import { PresentationBar } from './components/PresentationBar';
 import { drawElement } from './utils/canvasHelpers';
-import { Keyboard, HelpCircle } from 'lucide-react';
+import { Keyboard, HelpCircle, Download } from 'lucide-react';
 
 export default function App() {
   const [boards, setBoards] = useState<WhiteboardBoard[]>(() => loadSavedBoards());
@@ -256,7 +256,6 @@ export default function App() {
           onToggleBackground={handleToggleBackground}
           onOpenDrafts={() => setIsDraftsOpen(true)}
           onTogglePresentation={() => setIsPresentationMode(true)}
-          onExportPng={handleExportPng}
           onClearCanvas={handleClearCanvas}
         />
       )}
@@ -307,16 +306,26 @@ export default function App() {
         onImageInserted={() => setPendingImageUploadUrl(null)}
       />
 
-      {/* Floating Shortcuts Button */}
+      {/* Floating Bottom Right Buttons (Export PNG & Shortcuts) */}
       {!isPresentationMode && (
-        <button
-          onClick={() => setIsShortcutsOpen(true)}
-          title="Keyboard Shortcuts"
-          className="absolute bottom-6 right-6 p-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors z-30 flex items-center gap-2 text-xs font-medium"
-        >
-          <HelpCircle className="w-4 h-4" />
-          <span className="hidden sm:inline">Shortcuts</span>
-        </button>
+        <div className="absolute bottom-6 right-6 flex items-center gap-2 z-30">
+          <button
+            onClick={handleExportPng}
+            title="Export as PNG"
+            className="p-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors flex items-center gap-2 text-xs font-medium"
+          >
+            <Download className="w-4 h-4" />
+            <span className="hidden sm:inline">Export PNG</span>
+          </button>
+          <button
+            onClick={() => setIsShortcutsOpen(true)}
+            title="Keyboard Shortcuts"
+            className="p-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors flex items-center gap-2 text-xs font-medium"
+          >
+            <HelpCircle className="w-4 h-4" />
+            <span className="hidden sm:inline">Shortcuts</span>
+          </button>
+        </div>
       )}
 
       {/* Modals */}

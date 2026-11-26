@@ -35,7 +35,6 @@ interface TopToolbarProps {
   onToggleBackground: () => void;
   onOpenDrafts: () => void;
   onTogglePresentation: () => void;
-  onExportPng: () => void;
   onClearCanvas: () => void;
 }
 
@@ -73,7 +72,6 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
   onToggleBackground,
   onOpenDrafts,
   onTogglePresentation,
-  onExportPng,
   onClearCanvas,
 }) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -324,16 +322,6 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
           className="p-2 rounded-xl text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
         >
           <Trash2 className="w-4 h-4" />
-        </button>
-
-        {/* Export PNG */}
-        <button
-          onClick={onExportPng}
-          title="Export as PNG"
-          className="flex items-center gap-2 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-medium shadow-md shadow-indigo-600/25 transition-all"
-        >
-          <Download className="w-4 h-4" />
-          <span className="hidden sm:inline">Export PNG</span>
         </button>
       </div>
     </header>

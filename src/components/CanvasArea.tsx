@@ -52,6 +52,9 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
   const [shapeStart, setShapeStart] = useState<Point | null>(null);
   const [tempShapeEnd, setTempShapeEnd] = useState<Point | null>(null);
 
+  // Laser pointer trail state
+  const [laserPoints, setLaserPoints] = useState<Point[]>([]);
+
   // Moving / Resizing selected element
   const [isDraggingElement, setIsDraggingElement] = useState(false);
   const [dragOffset, setDragOffset] = useState<Point>({ x: 0, y: 0 });
@@ -61,9 +64,6 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space' && !spacePressed && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
         setSpacePressed(true);
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
-        // Undo handled by parent
       }
     };
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -190,6 +190,28 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
         }
       }
 
+      // Draw laser pointer trail if active
+      if (currentTool === 'laser' && laserPoints.length > 0) {
+        ctx.save();
+        ctx.strokeStyle = '#ef4444';
+        ctx.fillStyle = '#ef4444';
+        ctx.lineWidth = 4;
+        ctx.shadowColor = '#ef4444';
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.moveTo(laserPoints[0].x, laserPoints[0].y);
+        for (let i = 1; i < laserPoints.length; i++) {
+          ctx.lineTo(laserPoints[i].x, laserPoints[i].y);
+        }
+        ctx.stroke();
+        // Draw laser dot at tip
+        const last = laserPoints[laserPoints.length - 1];
+        ctx.beginPath();
+        ctx.arc(last.x, last.y, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
       ctx.restore();
     };
 
@@ -198,7 +220,7 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
     return () => {
       window.removeEventListener('resize', render);
     };
-  }, [elements, pan, zoom, backgroundType, isDrawing, currentPoints, shapeStart, tempShapeEnd, currentTool, currentColor, currentStrokeWidth, selectedElementId]);
+  }, [elements, pan, zoom, backgroundType, isDrawing, currentPoints, shapeStart, tempShapeEnd, currentTool, currentColor, currentStrokeWidth, selectedElementId, laserPoints]);
 
   const drawBackground = (
     ctx: CanvasRenderingContext2D,
@@ -302,9 +324,7 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
     }
 
     if (currentTool === 'select') {
-      // Find clicked element
       let clickedEl: WhiteboardElement | null = null;
-      // Search from top (end of array) to bottom
       for (let i = elements.length - 1; i >= 0; i--) {
         if (isPointInsideElement(worldPos, elements[i])) {
           clickedEl = elements[i];
@@ -323,13 +343,20 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
     }
 
     if (currentTool === 'eraser') {
-      // Erase element under point
+      setIsDrawing(true);
+      // Erase element under point immediately
       for (let i = elements.length - 1; i >= 0; i--) {
         if (isPointInsideElement(worldPos, elements[i])) {
           onDeleteElement(elements[i].id);
           break;
         }
       }
+      return;
+    }
+
+    if (currentTool === 'laser') {
+      setIsDrawing(true);
+      setLaserPoints([worldPos]);
       return;
     }
 
@@ -409,6 +436,21 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
 
     if (!isDrawing) return;
 
+    if (currentTool === 'eraser') {
+      for (let i = elements.length - 1; i >= 0; i--) {
+        if (isPointInsideElement(worldPos, elements[i])) {
+          onDeleteElement(elements[i].id);
+          break;
+        }
+      }
+      return;
+    }
+
+    if (currentTool === 'laser') {
+      setLaserPoints((prev) => [...prev.slice(-15), worldPos]);
+      return;
+    }
+
     if (currentTool === 'pencil' || currentTool === 'brush' || currentTool === 'highlighter') {
       setCurrentPoints((prev) => [...prev, worldPos]);
     } else if (['rectangle', 'circle', 'line', 'arrow'].includes(currentTool)) {
@@ -417,12 +459,14 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
   };
 
   const handlePointerUp = () => {
-    if (isPanning) {
-      setIsPanning(false);
-    }
+    if (isPanning) setIsPanning(false);
+    if (isDraggingElement) setIsDraggingElement(false);
 
-    if (isDraggingElement) {
-      setIsDraggingElement(false);
+    if (currentTool === 'laser') {
+      setIsDrawing(false);
+      // Fade out laser trail
+      const timer = setTimeout(() => setLaserPoints([]), 800);
+      return () => clearTimeout(timer);
     }
 
     if (isDrawing) {
